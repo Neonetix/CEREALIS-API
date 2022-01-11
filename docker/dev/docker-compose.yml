@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  nginx:
+    image: nginx:1.20.2-alpine
+    depends_on:
+      - php
+    ports:
+      - "${PORT}:8000"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/www.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.crt:/etc/nginx/nginx.crt
+      - ./nginx/nginx.key:/etc/nginx/nginx.key
+      - ${ROOT_PATH}/:/var/www/html
+      - ${ROOT_PATH}/var/log:/var/log/nginx
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - PORT=${PORT}
+      - HOST_UID_GID="${HOST_UID}:${HOST_GID}"
+    extra_hosts:
+      - "${DOMAIN_NAME}:127.0.0.1"
+    user: "${HOST_UID}:${HOST_GID}"
+    container_name: ${APP_DOCKER_NAME}
+
+  php:
+    build:
+      context: ../dev/php
+      cache_from:
+        - "${APP_DOCKER_PHP_IMAGE_NAME}"
+      args:
+        DOCKER_ENABLE_XDEBUG: ${DOCKER_ENABLE_XDEBUG}
+    image: "${APP_DOCKER_PHP_IMAGE_NAME}"
+    expose:
+      - '9000'
+    volumes:
+      - ${ROOT_PATH}/:/var/www/html
+      - ./php/www.ini:/usr/local/etc/php/conf.d/www.ini
+    user: "${HOST_UID}:${HOST_GID}"
+    container_name: ${APP_DOCKER_PHP_NAME}
+    environment:
+      PHP_IDE_CONFIG: serverName=${DOMAIN_NAME}
+      DOCKER_ENABLE_XDEBUG: ${DOCKER_ENABLE_XDEBUG}
