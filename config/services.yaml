@@ -23,3 +23,11 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Client\DataPersister\ClientDataPersister:
+        autoconfigure: false
+        arguments:
+            $decorated: '@api_platform.doctrine.orm.data_persister'
+        tags:
+            - { name: 'api_platform.data_persister', priority: 100 }
+
